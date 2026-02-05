@@ -54,8 +54,9 @@ wp2go --ui
 
 1. Creates a directory named after the sitename (e.g. `delfinki`) in the output path (or current dir).
 2. Extracts the .tar.gz archive there; if the archive has a single top-level directory, its contents are placed at project root.
-3. Runs `ddev config --project-type=wordpress --project-name=<sitename>` and `ddev start`.
-4. Detects the old site URL from the SQL dump (from `*_options` `siteurl`/`home`), replaces it with the DDEV URL, and runs `ddev import-db`.
+3. Patches `wp-config.php` so it uses DDEV’s database credentials (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` → `db`); `$table_prefix` is left unchanged.
+4. Runs `ddev config --project-type=wordpress --project-name=<sitename>` and `ddev start`.
+5. Detects the old site URL from the SQL dump (from `*_options` `siteurl`/`home`), replaces it with the DDEV URL, and runs `ddev import-db`.
 
 ## Project layout
 
@@ -68,7 +69,8 @@ wp2go/
 │   ├── ddev/         # ddev config, start, import-db
 │   ├── domain/       # Sitename → short name + FQDN
 │   ├── restore/      # Orchestration
-│   └── sql/          # Detect old URL, replace, temp file for import
+│   ├── sql/          # Detect old URL, replace, temp file for import
+│   └── wpconfig/     # Patch wp-config.php for DDEV DB credentials
 ├── main.go
 ├── go.mod
 └── go.sum

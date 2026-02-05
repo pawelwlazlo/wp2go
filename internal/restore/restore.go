@@ -8,6 +8,7 @@ import (
 	"wp2go/internal/ddev"
 	"wp2go/internal/domain"
 	"wp2go/internal/sql"
+	"wp2go/internal/wpconfig"
 )
 
 // Config holds input paths and options for the restore.
@@ -19,13 +20,17 @@ type Config struct {
 }
 
 // Run performs the full restore: normalize sitename, create project dir,
-// extract archive, configure DDEV, replace domain in SQL, import DB.
+// extract archive, patch wp-config for DDEV, configure DDEV, replace domain in SQL, import DB.
 func Run(cfg Config) error {
 	shortName, fqdn := domain.Normalize(cfg.Sitename)
 	projectDir := filepath.Join(cfg.OutputPath, shortName)
 
 	if err := archive.Extract(cfg.ArchivePath, projectDir); err != nil {
 		return fmt.Errorf("extract archive: %w", err)
+	}
+
+	if err := wpconfig.PatchForDDEV(projectDir); err != nil {
+		return fmt.Errorf("patch wp-config for DDEV: %w", err)
 	}
 
 	if err := ddev.Setup(projectDir, shortName); err != nil {
