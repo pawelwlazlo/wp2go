@@ -29,6 +29,7 @@ go build -o wp2go .
 | `--sitename` | `-s` | yes | Site name (e.g. `delfinki` → https://delfinki.ddev.site) |
 | `--output-path` | `-o` | no | Directory where to create the project (default: current directory) |
 | `--ui` | | no | Use interactive prompts for missing options |
+| `--force` | `-f` | no | Overwrite existing project directory |
 
 ### Examples
 
@@ -48,6 +49,12 @@ Interactive mode (prompts for archive, db, sitename, output path if not provided
 
 ```bash
 wp2go --ui
+```
+
+Force overwrite existing project:
+
+```bash
+wp2go -a archive.tar.gz -d dump.sql -s delfinki --force
 ```
 
 ## What it does

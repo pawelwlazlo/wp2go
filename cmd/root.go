@@ -19,6 +19,7 @@ var (
 	sitename    string
 	outputPath  string
 	useUI       bool
+	force       bool
 )
 
 var rootCmd = &cobra.Command{
@@ -36,6 +37,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&sitename, "sitename", "s", "", "site name (e.g. delfinki → https://delfinki.ddev.site)")
 	rootCmd.Flags().StringVarP(&outputPath, "output-path", "o", "", "directory where to create the project (default: current directory)")
 	rootCmd.Flags().BoolVar(&useUI, "ui", false, "use interactive prompts for missing options")
+	rootCmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite existing project directory")
 }
 
 func Execute() {
@@ -77,6 +79,7 @@ func run(cmd *cobra.Command, args []string) error {
 		DBPath:      dbPath,
 		Sitename:    sitename,
 		OutputPath:  projectDir,
+		Force:       force,
 	}
 	return restore.Run(cfg)
 }
@@ -126,6 +129,17 @@ func promptMissing() error {
 		if v != "" && v != "." {
 			outputPath = v
 		}
+	}
+	if !force {
+		p := promptui.Select{
+			Label: "Overwrite existing project if it exists",
+			Items: []string{"No", "Yes"},
+		}
+		_, result, err := p.Run()
+		if err != nil {
+			return fmt.Errorf("force prompt: %w", err)
+		}
+		force = result == "Yes"
 	}
 	return nil
 }

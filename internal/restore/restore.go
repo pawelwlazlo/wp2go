@@ -2,6 +2,7 @@ package restore
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"wp2go/internal/archive"
@@ -17,6 +18,7 @@ type Config struct {
 	DBPath      string
 	Sitename    string
 	OutputPath  string
+	Force       bool
 }
 
 // Run performs the full restore: normalize sitename, create project dir,
@@ -24,6 +26,13 @@ type Config struct {
 func Run(cfg Config) error {
 	shortName, fqdn := domain.Normalize(cfg.Sitename)
 	projectDir := filepath.Join(cfg.OutputPath, shortName)
+
+	// Check if project directory already exists
+	if _, err := os.Stat(projectDir); err == nil {
+		if !cfg.Force {
+			return fmt.Errorf("project directory already exists: %s\nUse --force to overwrite", projectDir)
+		}
+	}
 
 	if err := archive.Extract(cfg.ArchivePath, projectDir); err != nil {
 		return fmt.Errorf("extract archive: %w", err)
