@@ -30,6 +30,8 @@ go build -o wp2go .
 | `--output-path` | `-o` | no | Directory where to create the project (default: current directory) |
 | `--ui` | | no | Use interactive prompts for missing options |
 | `--force` | `-f` | no | Overwrite existing project directory |
+| `--config` | | no | Path to config file (yaml) |
+| `--host` | | no | Host name in config (under `hosts.<name>`) |
 
 ### Examples
 
@@ -55,6 +57,47 @@ Force overwrite existing project:
 
 ```bash
 wp2go -a archive.tar.gz -d dump.sql -s delfinki --force
+```
+
+### Config file
+
+You can define host-specific settings in YAML and select them with `--host`.
+Config files are searched in `./wp2go.{yaml,yml}` and `~/.config/wp2go/wp2go.{yaml,yml}`
+unless `--config` is provided.
+If a host is selected and `sitename` is omitted, it defaults to the host name.
+You can also set `host: <name>` in the config to choose a default host.
+
+Example:
+
+```yaml
+defaults:
+  output_path: ~/src
+  force: false
+
+host: delfinki
+
+hosts:
+  delfinki:
+    archive: /backups/delfinki.tar.gz
+    db: /backups/delfinki.sql
+    sitename: delfinki
+
+  example:
+    archive: /backups/example.tar.gz
+    db: /backups/example.sql
+    sitename: example
+    output_path: ~/src/example
+    force: true
+```
+
+Usage:
+
+```bash
+wp2go --host delfinki
+```
+
+```bash
+wp2go --config ~/wp2go.yml --host delfinki
 ```
 
 ## What it does

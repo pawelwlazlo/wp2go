@@ -32,12 +32,15 @@ and imports the database.`,
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
 	rootCmd.Flags().StringVarP(&archivePath, "archive", "a", "", "path to WordPress .tar.gz archive")
 	rootCmd.Flags().StringVarP(&dbPath, "db", "d", "", "path to SQL database dump")
 	rootCmd.Flags().StringVarP(&sitename, "sitename", "s", "", "site name (e.g. delfinki → https://delfinki.ddev.site)")
 	rootCmd.Flags().StringVarP(&outputPath, "output-path", "o", "", "directory where to create the project (default: current directory)")
 	rootCmd.Flags().BoolVar(&useUI, "ui", false, "use interactive prompts for missing options")
 	rootCmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite existing project directory")
+	rootCmd.Flags().StringVar(&configPath, "config", "", "path to config file (yaml)")
+	rootCmd.Flags().StringVar(&hostName, "host", "", "host name in config (under hosts.<name>)")
 }
 
 func Execute() {
@@ -47,6 +50,10 @@ func Execute() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	if err := applyConfig(cmd); err != nil {
+		return err
+	}
+
 	if useUI {
 		if err := promptMissing(); err != nil {
 			return err
@@ -131,15 +138,17 @@ func promptMissing() error {
 		}
 	}
 	if !force {
-		p := promptui.Select{
-			Label: "Overwrite existing project if it exists",
-			Items: []string{"No", "Yes"},
+		if !forceConfigured {
+			p := promptui.Select{
+				Label: "Overwrite existing project if it exists",
+				Items: []string{"No", "Yes"},
+			}
+			_, result, err := p.Run()
+			if err != nil {
+				return fmt.Errorf("force prompt: %w", err)
+			}
+			force = result == "Yes"
 		}
-		_, result, err := p.Run()
-		if err != nil {
-			return fmt.Errorf("force prompt: %w", err)
-		}
-		force = result == "Yes"
 	}
 	return nil
 }
