@@ -37,7 +37,7 @@ func init() {
 	restoreCmd.Flags().BoolVar(&useUI, "ui", false, "use interactive prompts for missing options")
 }
 
-func run(cmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, _ []string) error {
 	if useUI {
 		if err := promptMissing(); err != nil {
 			return err
