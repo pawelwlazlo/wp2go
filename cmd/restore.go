@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 
 	"wp2go/internal/restore"
@@ -26,7 +28,8 @@ var restoreCmd = &cobra.Command{
 	Long: `wp2go extracts a WordPress .tar.gz archive and SQL dump, creates a DDEV
 WordPress project, replaces the old site URL in the database with the DDEV URL,
 and imports the database.`,
-	RunE: run,
+	SilenceUsage: true,
+	RunE:         run,
 }
 
 func init() {
@@ -71,25 +74,24 @@ func run(_ *cobra.Command, _ []string) error {
 		Sitename:    siteName,
 		OutputPath:  projectDir,
 	}
+	if useUI {
+		if err := maybeSaveConfig(cfg); err != nil {
+			return err
+		}
+	}
 	return restore.Run(cfg)
 }
 
 func promptMissing() error {
 	if archivePath == "" {
-		p := promptui.Prompt{
-			Label: "Archive path (.tar.gz)",
-		}
-		v, err := p.Run()
+		v, err := selectFileOrPath("Archive path (.tar.gz)", []string{"*.tar.gz"})
 		if err != nil {
 			return fmt.Errorf("archive prompt: %w", err)
 		}
 		archivePath = strings.TrimSpace(v)
 	}
 	if dbPath == "" {
-		p := promptui.Prompt{
-			Label: "SQL database file",
-		}
-		v, err := p.Run()
+		v, err := selectFileOrPath("SQL database file", []string{"*.sql", "*.sql.gz"})
 		if err != nil {
 			return fmt.Errorf("db prompt: %w", err)
 		}
@@ -121,6 +123,107 @@ func promptMissing() error {
 		}
 	}
 	return nil
+}
+
+func selectFileOrPath(label string, patterns []string) (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	files, err := globFiles(cwd, patterns)
+	if err != nil {
+		return "", err
+	}
+	if len(files) == 0 {
+		return promptPath(label)
+	}
+	options := append(files, "Enter path...")
+	selectPrompt := promptui.Select{
+		Label: label,
+		Items: options,
+		Size:  min(12, len(options)),
+	}
+	_, choice, err := selectPrompt.Run()
+	if err != nil {
+		return "", err
+	}
+	if choice == "Enter path..." {
+		return promptPath(label)
+	}
+	return choice, nil
+}
+
+func promptPath(label string) (string, error) {
+	p := promptui.Prompt{
+		Label: label + " (enter path)",
+	}
+	return p.Run()
+}
+
+func globFiles(dir string, patterns []string) ([]string, error) {
+	seen := map[string]struct{}{}
+	for _, pattern := range patterns {
+		matches, err := filepath.Glob(filepath.Join(dir, pattern))
+		if err != nil {
+			return nil, err
+		}
+		for _, match := range matches {
+			seen[filepath.Base(match)] = struct{}{}
+		}
+	}
+	if len(seen) == 0 {
+		return nil, nil
+	}
+	files := make([]string, 0, len(seen))
+	for name := range seen {
+		files = append(files, name)
+	}
+	sort.Strings(files)
+	return files, nil
+}
+
+func maybeSaveConfig(cfg restore.Config) error {
+	p := promptui.Select{
+		Label: "Save configuration to wp2go.yaml?",
+		Items: []string{"No", "Yes"},
+	}
+	_, choice, err := p.Run()
+	if err != nil {
+		return err
+	}
+	if choice != "Yes" {
+		return nil
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(cwd, "wp2go.yaml")
+	data := formatConfigYAML(cfg)
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
+		return fmt.Errorf("write wp2go.yaml: %w", err)
+	}
+	return nil
+}
+
+func formatConfigYAML(cfg restore.Config) string {
+	return fmt.Sprintf(
+		"archive: %s\n"+
+			"db: %s\n"+
+			"siteName: %s\n"+
+			"outputPath: %s\n",
+		strconv.Quote(cfg.ArchivePath),
+		strconv.Quote(cfg.DBPath),
+		strconv.Quote(cfg.Sitename),
+		strconv.Quote(cfg.OutputPath),
+	)
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func expandPath(p string) string {
