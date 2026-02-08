@@ -141,7 +141,7 @@ func selectFileOrPath(label string, patterns []string) (string, error) {
 	selectPrompt := promptui.Select{
 		Label: label,
 		Items: options,
-		Size:  min(12, len(options)),
+		Size:  minimum(12, len(options)),
 	}
 	_, choice, err := selectPrompt.Run()
 	if err != nil {
@@ -219,7 +219,7 @@ func formatConfigYAML(cfg restore.Config) string {
 	)
 }
 
-func min(a, b int) int {
+func minimum(a, b int) int {
 	if a < b {
 		return a
 	}
