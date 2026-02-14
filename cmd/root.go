@@ -20,6 +20,8 @@ and imports the database.`,
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "path to configuration file")
+	rootCmd.PersistentFlags().StringVarP(&hostName, "host", "H", "", "host configuration to use")
 	rootCmd.AddCommand(restoreCmd)
 }
 func Execute() {

@@ -20,6 +20,7 @@ var (
 	dbPath      string
 	siteName    string
 	outputPath  string
+	force       bool
 )
 
 var restoreCmd = &cobra.Command{
@@ -29,7 +30,11 @@ var restoreCmd = &cobra.Command{
 WordPress project, replaces the old site URL in the database with the DDEV URL,
 and imports the database.`,
 	SilenceUsage: true,
-	RunE:         run,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		initConfig()
+		return applyConfig(cmd)
+	},
+	RunE: run,
 }
 
 func init() {
@@ -38,6 +43,7 @@ func init() {
 	restoreCmd.Flags().StringVarP(&siteName, "siteName", "s", "", "site name (e.g. example → https://example.ddev.site)")
 	restoreCmd.Flags().StringVarP(&outputPath, "output-path", "o", "", "directory where to create the project (default: current directory)")
 	restoreCmd.Flags().BoolVar(&useUI, "ui", false, "use interactive prompts for missing options")
+	restoreCmd.Flags().BoolVarP(&force, "force", "f", false, "force overwrite if project directory already exists")
 }
 
 func run(_ *cobra.Command, _ []string) error {
@@ -73,6 +79,7 @@ func run(_ *cobra.Command, _ []string) error {
 		DBPath:      dbPath,
 		Sitename:    siteName,
 		OutputPath:  projectDir,
+		Force:       force,
 	}
 	if useUI {
 		if err := maybeSaveConfig(cfg); err != nil {
@@ -207,15 +214,25 @@ func maybeSaveConfig(cfg restore.Config) error {
 }
 
 func formatConfigYAML(cfg restore.Config) string {
+	forceVal := "false"
+	if cfg.Force {
+		forceVal = "true"
+	}
+
 	return fmt.Sprintf(
-		"archive: %s\n"+
-			"db: %s\n"+
-			"siteName: %s\n"+
-			"outputPath: %s\n",
+		"defaults:\n"+
+			"  force: %s\n"+
+			"\n"+
+			"hosts:\n"+
+			"  %s:\n"+
+			"    archive: %s\n"+
+			"    db: %s\n"+
+			"    sitename: %s\n",
+		forceVal,
+		cfg.Sitename,
 		strconv.Quote(cfg.ArchivePath),
 		strconv.Quote(cfg.DBPath),
 		strconv.Quote(cfg.Sitename),
-		strconv.Quote(cfg.OutputPath),
 	)
 }
 
