@@ -6,6 +6,7 @@ wp2go
 .vscode/
 *.swp
 *.swo
+*.exe
 
 # OS
 .DS_Store
