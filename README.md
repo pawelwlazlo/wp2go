@@ -17,7 +17,7 @@ go build -o wp2go .
 ## Usage
 
 ```bash
-./wp2go -a delfinki-szkolaplywania.pl.tar.gz -d baza-2025-02-05.sql -s delfinki
+./wp2go -a example-szkolaplywania.pl.tar.gz -d baza-2025-02-05.sql -s example
 ```
 
 ### Options
@@ -26,7 +26,7 @@ go build -o wp2go .
 |------|-------|----------|-------------|
 | `--archive` | `-a` | yes | Path to WordPress .tar.gz archive |
 | `--db` | `-d` | yes | Path to SQL database dump |
-| `--sitename` | `-s` | yes | Site name (e.g. `delfinki` → https://delfinki.ddev.site) |
+| `--sitename` | `-s` | yes | Site name (e.g. `example` → https://example.ddev.site) |
 | `--output-path` | `-o` | no | Directory where to create the project (default: current directory) |
 | `--ui` | | no | Use interactive prompts for missing options |
 | `--force` | `-f` | no | Overwrite existing project directory |
@@ -35,16 +35,16 @@ go build -o wp2go .
 
 ### Examples
 
-Create project in current directory (project dir will be `./delfinki/`):
+Create project in current directory (project dir will be `./example/`):
 
 ```bash
-wp2go -a archive.tar.gz -d dump.sql -s delfinki
+wp2go -a archive.tar.gz -d dump.sql -s example
 ```
 
-Create project under `~/src/delfinki`:
+Create project under `~/src/example`:
 
 ```bash
-wp2go -a archive.tar.gz -d dump.sql -s delfinki -o ~/src/delfinki
+wp2go -a archive.tar.gz -d dump.sql -s example -o ~/src/example
 ```
 
 Interactive mode (prompts for archive, db, sitename, output path if not provided):
@@ -102,7 +102,7 @@ wp2go --config ~/wp2go.yml --host delfinki
 
 ## What it does
 
-1. Creates a directory named after the sitename (e.g. `delfinki`) in the output path (or current dir).
+1. Creates a directory named after the sitename (e.g. `example`) in the output path (or current dir).
 2. Extracts the .tar.gz archive there; if the archive has a single top-level directory, its contents are placed at project root.
 3. Patches `wp-config.php` so it uses DDEV’s database credentials (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` → `db`); `$table_prefix` is left unchanged.
 4. Runs `ddev config --project-type=wordpress --project-name=<sitename>` and `ddev start`.

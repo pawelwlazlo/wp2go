@@ -1,0 +1,11 @@
+defaults:
+  output_path: ~/src
+  force: false
+
+host: delfinki
+
+hosts:
+  delfinki:
+    archive: /backups/delfinki.tar.gz
+    db: /backups/delfinki.sql
+    sitename: delfinki

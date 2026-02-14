@@ -78,7 +78,7 @@ func applyConfig(cmd *cobra.Command) error {
 	}
 	if !cmd.Flags().Changed("sitename") {
 		if v, ok := getConfigString(hostName, "sitename"); ok {
-			sitename = v
+			siteName = v
 		}
 	}
 	if !cmd.Flags().Changed("output-path") {
@@ -93,8 +93,8 @@ func applyConfig(cmd *cobra.Command) error {
 		}
 	}
 
-	if sitename == "" && hostName != "" && !cmd.Flags().Changed("sitename") {
-		sitename = hostName
+	if siteName == "" && hostName != "" && !cmd.Flags().Changed("sitename") {
+		siteName = hostName
 	}
 
 	return nil
